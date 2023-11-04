@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Smoofy</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="fragment_smoothie_list_title">Smoofy</string>
+    <string name="smoothies">Smoothies</string>
+    <string name="specialities">Specialities</string>
+    <string name="all_product">All products</string>
+    <string name="profileMenuItemTitle">Profile</string>
+    <string name="messageMenuItemTitle">Message</string>
+    <string name="promotionsMenuItemTitle">Promotions</string>
+    <string name="favoritesMenuItemTitle">Favorites</string>
+    <string name="categoriesMenuItemTitle">Categories</string>
+    <string name="detailFragmentTitle">Smoothies</string>
+    <string name="quantityTitle">Quantity</string>
+    <string name="btnUpText">+</string>
+    <string name="defaultStartQuantity">1</string>
+    <string name="btnDownText">-</string>
+    <string name="recommendProductsTitle">Recommend products</string>
+    <string name="cartFragmentTitle">Your cart</string>
+    <string name="btnApplyText">Apply</string>
+    <string name="txtPromoCodeHint">Enter your promo code</string>
+    <string name="paymentTitle">Payment:</string>
+    <string name="totalTitle">Total:</string>
+    <string name="btnCheckoutText">Checkout</string>
+    <string name="EditTextEmailHint">Email</string>
+    <string name="editTextPasswordHint">Password</string>
+    <string name="forgetPasswordText">Forget Password?</string>
+    <string name="btnLoginText">Log in</string>
+    <string name="registerNavTitle">Not a member?</string>
+    <string name="registerNavText">Join now</string>
+    <string name="agreeTermsTitle">I agree to the </string>
+    <string name="agreeTermsLink">Terms and Conditions</string>
+    <string name="btnRegisterText">Register</string>
+    <string name="loggingNavText">Logging</string>
+    <string name="loggingNavTitle">Have an account?</string>
+    <string name="rePasswordHint">Re-enter password</string>
+    <string name="btnSubmitText">Add to cart</string>
+
+    <string-array name="errorRegister">
+        <item>Email/Password isn\'t correct!!!</item>
+        <item>Email/Password isn\'t correct format!!!</item>
+        <item>Re-password isn\'t correct!!!</item>
+        <item>Email has been used!!!</item>
+    </string-array>
+    <string-array name="paymentMethods">
+        <item>--Select payment method--</item>
+        <item>--Direct payment--</item>
+        <item>--Payment via Momo--</item>
+    </string-array>
+</resources>

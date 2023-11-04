@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_between_elements"
+        tools:background="@color/green_1">
+
+        <FrameLayout
+            android:id="@id/imageLayout"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:background="@drawable/shape_7"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.utils.widget.ImageFilterView
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                app:roundPercent="0.25"
+                tools:src="@tools:sample/avatars" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_between_elements"
+            android:layout_marginTop="@dimen/margin_default"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toStartOf="@id/btnReduce"
+            app:layout_constraintStart_toEndOf="@id/imageLayout"
+            app:layout_constraintTop_toTopOf="@id/imageLayout"
+            tools:text="Smoothie Green Power" />
+
+        <TextView
+            android:id="@+id/price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_between_elements"
+            android:layout_marginTop="@dimen/margin_between_elements"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/imageLayout"
+            app:layout_constraintTop_toBottomOf="@id/name"
+            tools:text="$" />
+
+        <ImageView
+            android:id="@+id/btnRemove"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_default"
+            android:background="@drawable/shape_7"
+            android:contentDescription="Button remove product out your cart"
+            android:padding="4dp"
+            android:src="@drawable/outline_delete_forever_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnIncrease"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="@dimen/margin_between_elements"
+            android:background="@drawable/shape_7"
+            android:backgroundTint="@color/white"
+            android:padding="0dp"
+            android:text="@string/btnUpText"
+            android:textColor="@color/green_1"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnRemove" />
+
+        <TextView
+            android:id="@+id/quantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_between_elements"
+            android:text="@string/defaultStartQuantity"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@id/btnIncrease"
+            app:layout_constraintEnd_toStartOf="@id/btnIncrease"
+            app:layout_constraintTop_toTopOf="@id/btnIncrease" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnReduce"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="@dimen/margin_between_elements"
+            android:background="@drawable/shape_7"
+            android:backgroundTint="@color/white"
+            android:padding="0dp"
+            android:text="@string/btnDownText"
+            android:textColor="@color/green_1"
+            android:textScaleX="1.5"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/btnIncrease"
+            app:layout_constraintEnd_toStartOf="@id/quantity"
+            app:layout_constraintTop_toTopOf="@id/btnIncrease" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

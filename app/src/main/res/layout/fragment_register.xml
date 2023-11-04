@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/green_1"
+        android:padding="32dp"
+        tools:context=".ui.loginscreen.fragment.RegisterFragment">
+
+        <TextView
+            android:id="@+id/appName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="72dp"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="56sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="."
+            android:textColor="@color/green_2"
+            android:textSize="56sp"
+            android:textStyle="bold"
+            android:translationX="-8dp"
+            app:layout_constraintBottom_toBottomOf="@id/appName"
+            app:layout_constraintStart_toEndOf="@id/appName" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/emailLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/appName">
+
+            <EditText
+                android:id="@+id/email"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:autofillHints="emailAddress"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_baseline_alternate_email_24"
+                android:drawablePadding="@dimen/margin_default"
+                android:drawableTint="@color/green_2"
+                android:hint="@string/EditTextEmailHint"
+                android:inputType="textEmailAddress"
+                android:padding="@dimen/margin_between_elements"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:dividerColor="@color/green_2"
+                app:layout_constraintBottom_toBottomOf="@id/email"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:background="@color/green_2"
+                android:translationX="40dp"
+                app:layout_constraintBottom_toBottomOf="@id/email"
+                app:layout_constraintStart_toStartOf="@id/email"
+                app:layout_constraintTop_toTopOf="@id/email" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/passwordLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_between_parts"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/emailLayout">
+
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:autofillHints="password"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_baseline_lock_24"
+                android:drawablePadding="@dimen/margin_default"
+                android:drawableTint="@color/green_2"
+                android:hint="@string/editTextPasswordHint"
+                android:inputType="textPassword"
+                android:padding="@dimen/margin_between_elements"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:dividerColor="@color/green_2"
+                app:layout_constraintBottom_toBottomOf="@id/password"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:background="@color/green_2"
+                android:translationX="40dp"
+                app:layout_constraintBottom_toBottomOf="@id/password"
+                app:layout_constraintStart_toStartOf="@id/password"
+                app:layout_constraintTop_toTopOf="@id/password" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/rePasswordLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_between_parts"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/passwordLayout">
+
+            <EditText
+                android:id="@+id/rePassword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:autofillHints="password"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_baseline_lock_24"
+                android:drawablePadding="@dimen/margin_default"
+                android:drawableTint="@color/green_2"
+                android:hint="@string/rePasswordHint"
+                android:inputType="textPassword"
+                android:padding="@dimen/margin_between_elements"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:dividerColor="@color/green_2"
+                app:layout_constraintBottom_toBottomOf="@id/rePassword"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:background="@color/green_2"
+                android:translationX="40dp"
+                app:layout_constraintBottom_toBottomOf="@id/rePassword"
+                app:layout_constraintStart_toStartOf="@id/rePassword"
+                app:layout_constraintTop_toTopOf="@id/rePassword" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/error"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_between_parts"
+            android:textColor="#f00"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rePasswordLayout"
+            tools:text="Password don't correct" />
+
+        <CheckBox
+            android:id="@+id/cbxAgreeTerms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_between_elements"
+            app:buttonTint="@color/green_2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/error" />
+
+        <TextView
+            android:id="@+id/agreeLawTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/agreeTermsTitle"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toBottomOf="@id/cbxAgreeTerms"
+            app:layout_constraintStart_toEndOf="@id/cbxAgreeTerms"
+            app:layout_constraintTop_toTopOf="@id/cbxAgreeTerms" />
+
+        <TextView
+            android:id="@+id/agreeLawLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="@string/agreeTermsLink"
+            android:textColor="@color/green_3"
+            android:textStyle="italic"
+            app:layout_constraintBottom_toBottomOf="@id/cbxAgreeTerms"
+            app:layout_constraintStart_toEndOf="@id/agreeLawTitle"
+            app:layout_constraintTop_toTopOf="@id/cbxAgreeTerms" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:dividerColor="@color/green_3"
+            app:layout_constraintBottom_toBottomOf="@id/agreeLawLink"
+            app:layout_constraintEnd_toEndOf="@id/agreeLawLink"
+            app:layout_constraintStart_toStartOf="@id/agreeLawLink" />
+
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_between_elements"
+            android:backgroundTint="@color/green_2"
+            android:enabled="false"
+            android:text="@string/btnRegisterText"
+            android:textColor="@color/green_1"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbxAgreeTerms" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_default"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnRegister">
+
+            <TextView
+                android:id="@+id/loginNavTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/loggingNavTitle"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/loginNav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_between_elements"
+                android:text="@string/loggingNavText"
+                android:textColor="@color/green_2" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
