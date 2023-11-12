@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import com.example.smoothieshopapp.model.Cart
 import com.example.smoothieshopapp.model.Smoothie
+import com.example.smoothieshopapp.model.User
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -82,9 +83,6 @@ class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
                 val mapSmoothieRemoved = snapshot.getValue<Map<String, Any?>>()
 
                 if (keySmoothieRemoved != null && mapSmoothieRemoved != null) {
-                    // Convert from Map to Smoothie
-                    val smoothie = Smoothie(snapshot.key.toString(), mapSmoothieRemoved)
-
                     // Create a medium list
                     val smoothieList = mutableListOf<Smoothie>()
 
@@ -324,7 +322,7 @@ class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
                 object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         // If first update isn't complete
-                        if(!isComplete) {
+                        if (!isComplete) {
                             // Get current quantity in stock
                             val current = snapshot.getValue<Int>() ?: 0
                             // Update quantity in stock
@@ -380,6 +378,73 @@ class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
      */
     fun removeSmoothieFromCart(userId: String, smoothieId: String): Boolean {
         return database.child("users/$userId/cart").child(smoothieId).removeValue().isSuccessful
+    }
+
+    /**
+     * This function is used to get user information by user id
+     *
+     * @param userId
+     */
+    fun getUserInformation(userId: String): LiveData<User> {
+        val user = MutableLiveData<User>()
+
+        database.child("users/$userId").addValueEventListener(
+            object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    // Get user as a map
+                    val userMap = snapshot.getValue<Map<String, Any?>>()
+                    // Convert map to object and update livedata
+                    userMap?.also {
+                        user.value = User(
+                            userId,
+                            it["name"].toString(),
+                            it["address"].toString(),
+                            it["phoneNumber"].toString()
+                        )
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d(TAG, "onCancelled: " + error.toException())
+                }
+
+            }
+        )
+
+        return user
+    }
+
+    /**
+     * This function is used to validate user information entry(no empty)
+     *
+     * @param userName
+     * @param address
+     * @param phoneNumber
+     */
+    fun validUserInfoEntry(userName: String, address: String, phoneNumber: String): Boolean {
+        return userName.isNotEmpty() && address.isNotEmpty() && phoneNumber.isNotEmpty()
+    }
+
+    /**
+     * This function is used to update new information to firebase
+     *
+     * @param userId
+     * @param name
+     * @param address
+     * @param phoneNumber
+     */
+    fun updateNewUserInformation(
+        userId: String,
+        name: String,
+        address: String,
+        phoneNumber: String
+    ) {
+        // Set name
+        database.child("users/$userId/name").setValue(name)
+        // Set address
+        database.child("users/$userId/address").setValue(address)
+        // Set phone number
+        database.child("users/$userId/phoneNumber").setValue(phoneNumber)
     }
 }
 
