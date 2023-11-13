@@ -3,6 +3,7 @@ package com.example.smoothieshopapp.ui.moothiescreen.fragment
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -12,18 +13,27 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.privacysandbox.ads.adservices.topics.Topic
 import com.example.smoothieshopapp.R
 import com.example.smoothieshopapp.databinding.FragmentCartBinding
 import com.example.smoothieshopapp.databinding.FragmentSetupUserInfoDialogBinding
 import com.example.smoothieshopapp.model.Cart
+import com.example.smoothieshopapp.model.NotificationData
+import com.example.smoothieshopapp.model.NotificationPush
 import com.example.smoothieshopapp.model.User
 import com.example.smoothieshopapp.model.priceFormatted
 import com.example.smoothieshopapp.network.SmoothieApi
 import com.example.smoothieshopapp.ui.moothiescreen.adapter.SmoothiePayAdapter
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModel
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModelFactory
+import com.example.smoothieshopapp.util.Constants.Companion.TOPIC
 import com.example.smoothieshopapp.util.loadImageWithImageUrl
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.material.tabs.TabLayout.TabGravity
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.messaging.FirebaseMessaging
+
+private const val TAG = "CartFragment"
 
 class CartFragment : Fragment() {
 
@@ -43,6 +53,9 @@ class CartFragment : Fragment() {
 
     // Get list products in cart as a string
     private var strProducts: String? = null
+
+    // Smoothies in cart
+    private var cart: List<Cart>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -95,6 +108,7 @@ class CartFragment : Fragment() {
 
         user?.also {
             viewModel.getSmoothiesInCart(it.uid).observe(this.viewLifecycleOwner) { cart ->
+                this.cart = cart
                 bind(cart)
             }
         }
@@ -174,7 +188,7 @@ class CartFragment : Fragment() {
 
                         // Check payment method
                         if (binding.paymentMethod.text.toString() == resources.getStringArray(R.array.paymentMethods)[1]) {
-                            // Todo direct payment
+                            // Direct payment
                             AlertDialog.Builder(requireContext())
                                 .setTitle(getString(R.string.confirmOrderDialogTitle))
                                 .setMessage(
@@ -184,7 +198,13 @@ class CartFragment : Fragment() {
                                         strProducts ?: ""
                                     )
                                 ).setPositiveButton(getString(R.string.oke)) { _, _ ->
-                                    // Todo save order and notification wait admin confirm i
+                                    // Save order
+                                    pushBill()
+                                    // Notification wait admin confirm it
+                                    pushNotification(
+                                        "Create bill",
+                                        "Bill creation has been completed, please wait for the administrator to check and confirm."
+                                    )
                                 }.setNegativeButton(getString(R.string.cancel)) { _, _ -> }
                                 .create()
                                 .show()
@@ -205,9 +225,9 @@ class CartFragment : Fragment() {
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
-                    }
 
-                    livedata.removeObservers(this.viewLifecycleOwner)
+                        livedata.removeObservers(this.viewLifecycleOwner)
+                    }
                 }
 
             }
@@ -276,6 +296,44 @@ class CartFragment : Fragment() {
                 // If old y in scroll range and it scroll out scrollRange after,
                 // scroll toolbar to scrollRange
                 binding.toolbar.scrollTo(0, scrollRange)
+            }
+        }
+    }
+
+    /**
+     * This function is used to push notification when checkout successful
+     */
+    private fun pushNotification(title: String, message: String) {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.e(
+                    TAG,
+                    "setOnButtonCheckoutClick: " + task.exception
+                )
+                return@addOnCompleteListener
+            }
+            // Get token
+            val token = task.result
+            // Send notification
+            viewModel.sendNotification(
+                NotificationPush(
+                    NotificationData(title, message),
+                    token
+                )
+            )
+        }
+    }
+
+    /**
+     * This function is used to push bill and remove cart
+     */
+    private fun pushBill() {
+        user?.also { user ->
+            cart?.also { cart ->
+                // Add bill
+                viewModel.addBill(userId = user.uid, cart)
+                // Remove cart
+                viewModel.removeSmoothiesInCart(user.uid)
             }
         }
     }
