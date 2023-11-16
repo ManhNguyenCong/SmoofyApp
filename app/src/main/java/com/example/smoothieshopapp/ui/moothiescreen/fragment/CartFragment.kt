@@ -10,11 +10,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.privacysandbox.ads.adservices.topics.Topic
 import com.example.smoothieshopapp.R
+import com.example.smoothieshopapp.databinding.FragmentBillDialogBinding
 import com.example.smoothieshopapp.databinding.FragmentCartBinding
 import com.example.smoothieshopapp.databinding.FragmentSetupUserInfoDialogBinding
 import com.example.smoothieshopapp.model.Cart
@@ -26,11 +28,7 @@ import com.example.smoothieshopapp.network.SmoothieApi
 import com.example.smoothieshopapp.ui.moothiescreen.adapter.SmoothiePayAdapter
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModel
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModelFactory
-import com.example.smoothieshopapp.util.Constants.Companion.TOPIC
 import com.example.smoothieshopapp.util.loadImageWithImageUrl
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.material.tabs.TabLayout.TabGravity
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.messaging.FirebaseMessaging
 
 private const val TAG = "CartFragment"
@@ -49,7 +47,7 @@ class CartFragment : Fragment() {
     private var smoothiePayAdapter: SmoothiePayAdapter? = null
 
     // Current user
-    private var user: FirebaseUser? = null
+    private var user: User? = null
 
     // Get list products in cart as a string
     private var strProducts: String? = null
@@ -66,36 +64,16 @@ class CartFragment : Fragment() {
 
         // Set auto scroll toolbar
         autoScrollToolbar()
-
+        // Set open/close navigation view
+        setNavigationView()
         // Set up recycler view
         setupRecyclerView()
-
-        // Set event choose payment method
-        binding.paymentMethod.setOnClickListener {
-            val popupMenu = PopupMenu(requireContext(), binding.paymentMethod, Gravity.CENTER)
-
-            val paymentMethods = resources.getStringArray(R.array.paymentMethods)
-            popupMenu.menu.add(paymentMethods[1])
-            popupMenu.menu.add(paymentMethods[2])
-
-            popupMenu.setOnMenuItemClickListener { menuItem ->
-                if (menuItem.title in paymentMethods) {
-                    binding.paymentMethod.text = menuItem.title
-                    // If payment method is selected, enable button checkout
-                    if (menuItem.title != paymentMethods[0]) {
-                        binding.btnCheckout.isEnabled = true
-                    }
-                    true
-                } else {
-                    false
-                }
-            }
-
-            popupMenu.show()
-        }
-
+        // Set up combo-box payment method
+        setCbxPaymentMethod()
         // Set event onclick for button checkout
         setOnButtonCheckoutClick()
+        // Set default total price text
+        binding.totalPrice.text = getString(R.string.defaultTotalPriceText)
 
         return binding.root
     }
@@ -104,12 +82,52 @@ class CartFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Get current user
-        user = SmoothieApi.firebaseAuth.currentUser
+        SmoothieApi.firebaseAuth.currentUser?.also { firebaseUser ->
+            viewModel.getUserInformation(firebaseUser.uid).observe(this.viewLifecycleOwner) {
+                user = it
+            }
+        }
 
-        user?.also {
+        // Get smoothies in cart
+        SmoothieApi.firebaseAuth.currentUser?.also {
             viewModel.getSmoothiesInCart(it.uid).observe(this.viewLifecycleOwner) { cart ->
                 this.cart = cart
                 bind(cart)
+            }
+        }
+    }
+
+    /**
+     * This function is used to scroll toolbar when scroll main content of fragment
+     */
+    private fun autoScrollToolbar() {
+        // Get range which toolbar can scroll (0..scrollRange)
+        val scrollRange = binding.fragmentTitle.paddingTop - binding.fragmentTitle.paddingBottom
+
+        binding.scrollView.setOnScrollChangeListener { _, _, y, _, oldY ->
+            if (y <= scrollRange) {
+                // If scroll y in scroll range, scroll toolbar to y
+                binding.toolbar.scrollTo(0, y)
+            } else if (oldY < scrollRange) {
+                // If old y in scroll range and it scroll out scrollRange after,
+                // scroll toolbar to scrollRange
+                binding.toolbar.scrollTo(0, scrollRange)
+            }
+        }
+    }
+
+    /**
+     * This function is used to open/ close navigation view
+     *
+     */
+    private fun setNavigationView() {
+        binding.openNavView.setOnClickListener {
+            val drawerLayout =
+                activity?.findViewById<DrawerLayout>(R.id.drawerLayout) ?: return@setOnClickListener
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START)
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START)
             }
         }
     }
@@ -150,87 +168,104 @@ class CartFragment : Fragment() {
     private fun setOnButtonCheckoutClick() {
         // Even click button checkout
         binding.btnCheckout.setOnClickListener {
-            user?.also { user ->
-                viewModel.getUserInformation(userId = user.uid).also { livedata ->
-                    livedata.observe(this.viewLifecycleOwner) { userInfo ->
-                        // If user don't enter some information, show set up user information
-                        if (userInfo.name.isEmpty() || userInfo.address.isEmpty() || userInfo.phoneNumber.isEmpty()) {
-                            // Show set up user information
-                            Toast.makeText(
-                                requireContext(),
-                                "Enter full your information, please!!!",
-                                Toast.LENGTH_SHORT
-                            ).show()
+            user?.also { userInfo ->
+                // If user don't enter some information, show set up user information
+                if (userInfo.name.isEmpty() || userInfo.address.isEmpty() || userInfo.phoneNumber.isEmpty()) {
+                    // Show set up user information
+                    Toast.makeText(
+                        requireContext(),
+                        "Enter full your information, please!!!",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                            // Show dialog
-                            SetUpUserInfoDialogFragment(
-                                userInfo
-                            ) { userName, address, phoneNumber ->
-                                // Valid entry
-                                if (viewModel.validUserInfoEntry(userName, address, phoneNumber)) {
-                                    // If correct, update them to db
-                                    viewModel.updateNewUserInformation(
-                                        user.uid,
-                                        userName,
-                                        address,
-                                        phoneNumber
-                                    )
-                                } else {
-                                    // Notification
-                                    Toast.makeText(
-                                        requireContext(),
-                                        "You need fill full your information to order products!!!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }.show(childFragmentManager, SetUpUserInfoDialogFragment.TAG)
-                        }
-
-                        // Check payment method
-                        if (binding.paymentMethod.text.toString() == resources.getStringArray(R.array.paymentMethods)[1]) {
-                            // Direct payment
-                            AlertDialog.Builder(requireContext())
-                                .setTitle(getString(R.string.confirmOrderDialogTitle))
-                                .setMessage(
-                                    String.format(
-                                        getString(R.string.confirmOrderDialogMessage),
-                                        binding.totalPrice.text.toString(),
-                                        strProducts ?: ""
-                                    )
-                                ).setPositiveButton(getString(R.string.oke)) { _, _ ->
-                                    // Save order
-                                    pushBill()
-                                    // Notification wait admin confirm it
-                                    pushNotification(
-                                        "Create bill",
-                                        "Bill creation has been completed, please wait for the administrator to check and confirm."
-                                    )
-                                }.setNegativeButton(getString(R.string.cancel)) { _, _ -> }
-                                .create()
-                                .show()
-                        } else if (binding.paymentMethod.text.toString()
-                            == resources.getStringArray(R.array.paymentMethods)[2]
-                        ) {
-                            // Todo payment via
-                            Toast.makeText(
-                                requireContext(),
-                                "Pay will be released in the future!!!",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                    // Show dialog
+                    SetUpUserInfoDialogFragment(
+                        userInfo
+                    ) { userName, address, phoneNumber ->
+                        // Valid entry
+                        if (viewModel.validUserInfoEntry(userName, address, phoneNumber)) {
+                            // If correct, update them to db
+                            viewModel.updateNewUserInformation(
+                                userInfo.id,
+                                userName,
+                                address,
+                                phoneNumber
+                            )
                         } else {
-                            // If don't select payment method, disable button checkout
+                            // Notification
                             Toast.makeText(
                                 requireContext(),
-                                "You need select payment method before checkout!!!",
+                                "You need fill full your information to order products!!!",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
-
-                        livedata.removeObservers(this.viewLifecycleOwner)
-                    }
+                    }.show(childFragmentManager, SetUpUserInfoDialogFragment.TAG)
                 }
 
+                // Check payment method
+                if (binding.paymentMethod.text.toString() == resources.getStringArray(R.array.paymentMethods)[1]) {
+                    // Direct payment
+                    strProducts?.also { products ->
+                        BillDialogFragment(
+                            userInfo,
+                            products,
+                            binding.totalPrice.text.toString()
+                        ) {
+                            // Save order
+                            pushBill()
+                            // Notification wait admin confirm it
+                            pushNotification(
+                                "Create bill",
+                                "Bill creation has been completed, please wait for the administrator to check and confirm."
+                            )
+                        }.show(childFragmentManager, BillDialogFragment.TAG)
+                    }
+                } else if (binding.paymentMethod.text.toString()
+                    == resources.getStringArray(R.array.paymentMethods)[2]
+                ) {
+                    // Todo payment via
+                    Toast.makeText(
+                        requireContext(),
+                        "Pay will be released in the future!!!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    // If don't select payment method, disable button checkout
+                    Toast.makeText(
+                        requireContext(),
+                        "You need select payment method before checkout!!!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
+        }
+    }
+
+    /**
+     * This function is used to set combo-box payment method
+     */
+    private fun setCbxPaymentMethod() {
+        if (binding.paymentMethod.text.isEmpty()) {
+            binding.paymentMethod.text = resources.getStringArray(R.array.paymentMethods)[0]
+        }
+        // Set event choose payment method
+        binding.paymentMethod.setOnClickListener {
+            val popupMenu = PopupMenu(requireContext(), binding.paymentMethod, Gravity.CENTER)
+
+            val paymentMethods = resources.getStringArray(R.array.paymentMethods)
+            popupMenu.menu.add(paymentMethods[1])
+            popupMenu.menu.add(paymentMethods[2])
+
+            popupMenu.setOnMenuItemClickListener { menuItem ->
+                if (menuItem.title in paymentMethods) {
+                    binding.paymentMethod.text = menuItem.title
+                    true
+                } else {
+                    false
+                }
+            }
+
+            popupMenu.show()
         }
     }
 
@@ -240,62 +275,50 @@ class CartFragment : Fragment() {
      * @param carts
      */
     private fun bind(carts: List<Cart>) {
-        // Submit list for smoothiePayAdapter
-        smoothiePayAdapter?.also {
-            it.submitList(carts)
-        }
+        if (carts.isEmpty()) {
+            binding.smoothieRecyclerView.visibility = View.GONE
+            binding.txtEmptyCart.visibility = View.VISIBLE
+            binding.totalPrice.text = getString(R.string.defaultTotalPriceText)
+            binding.btnCheckout.isEnabled = false
+        } else {
+            binding.smoothieRecyclerView.visibility = View.VISIBLE
+            binding.txtEmptyCart.visibility = View.GONE
+            binding.btnCheckout.isEnabled = true
 
-        // Map of cost for each smoothie in cart,
-        // use Map, because when observe a livedata, it can be repeated, so
-        // need a key to don't get again cost of a smoothie
-        val costs: MutableMap<String, Float> = mutableMapOf()
-        // Map name of smoothies
-        val names = mutableSetOf<String>()
-
-        carts.forEach { cart ->
-            val smoothieLiveData = viewModel.getSmoothieById(cart.smoothieId)
-
-            smoothieLiveData.observe(this.viewLifecycleOwner) { smoothie ->
-                // Add cost of a smoothie in cart to map with key is it's id
-                if (!costs.contains(smoothie.id)) {
-                    costs[smoothie.id] = smoothie.price * cart.quantity
-                }
-                // Calculate total price
-                val totalPrice = costs.map { (_, value) ->
-                    value
-                }.sum()
-                // Set text for total price
-                binding.totalPrice.text = String.format("%.2f$", totalPrice)
-
-                // Get list product as a string
-                names.add(cart.quantity.toString() + "x" + smoothie.name)
-                strProducts = names.joinToString(", ")
-
-                // Remove observer after calculate price complete
-                smoothieLiveData.removeObservers(this.viewLifecycleOwner)
+            // Submit list for smoothiePayAdapter
+            smoothiePayAdapter?.also {
+                it.submitList(carts)
             }
-        }
 
-        if (binding.paymentMethod.text.isEmpty()) {
-            binding.paymentMethod.text = resources.getStringArray(R.array.paymentMethods)[0]
-        }
-    }
+            // Map of cost for each smoothie in cart,
+            // use Map, because when observe a livedata, it can be repeated, so
+            // need a key to don't get again cost of a smoothie
+            val costs: MutableMap<String, Float> = mutableMapOf()
+            // Map name of smoothies
+            val names = mutableSetOf<String>()
 
-    /**
-     * This function is used to scroll toolbar when scroll main content of fragment
-     */
-    private fun autoScrollToolbar() {
-        // Get range which toolbar can scroll (0..scrollRange)
-        val scrollRange = binding.fragmentTitle.paddingTop - binding.fragmentTitle.paddingBottom
+            carts.forEach { cart ->
+                val smoothieLiveData = viewModel.getSmoothieById(cart.smoothieId)
 
-        binding.scrollView.setOnScrollChangeListener { _, _, y, _, oldY ->
-            if (y <= scrollRange) {
-                // If scroll y in scroll range, scroll toolbar to y
-                binding.toolbar.scrollTo(0, y)
-            } else if (oldY < scrollRange) {
-                // If old y in scroll range and it scroll out scrollRange after,
-                // scroll toolbar to scrollRange
-                binding.toolbar.scrollTo(0, scrollRange)
+                smoothieLiveData.observe(this.viewLifecycleOwner) { smoothie ->
+                    // Add cost of a smoothie in cart to map with key is it's id
+                    if (!costs.contains(smoothie.id)) {
+                        costs[smoothie.id] = smoothie.price * cart.quantity
+                    }
+                    // Calculate total price
+                    val totalPrice = costs.map { (_, value) ->
+                        value
+                    }.sum()
+                    // Set text for total price
+                    binding.totalPrice.text = String.format("%.2f$", totalPrice)
+
+                    // Get list product as a string
+                    names.add(cart.quantity.toString() + " x " + smoothie.name)
+                    strProducts = names.joinToString("\n")
+
+                    // Remove observer after calculate price complete
+                    smoothieLiveData.removeObservers(this.viewLifecycleOwner)
+                }
             }
         }
     }
@@ -331,9 +354,9 @@ class CartFragment : Fragment() {
         user?.also { user ->
             cart?.also { cart ->
                 // Add bill
-                viewModel.addBill(userId = user.uid, cart)
+                viewModel.addBill(userId = user.id, cart)
                 // Remove cart
-                viewModel.removeSmoothiesInCart(user.uid)
+                viewModel.removeSmoothiesInCart(user.id)
             }
         }
     }
@@ -382,5 +405,55 @@ class SetUpUserInfoDialogFragment(
 
     companion object {
         const val TAG = "SetUpUserInfoDialog"
+    }
+}
+
+/**
+ * This class is used to setup a bill dialog fragment
+ * which show user info and products want to payment
+ *
+ * @param user
+ * @param products They have template is "name x quantity" and split by "\n"
+ * @param totalPrice It have template "total$"
+ * @param onPositiveButtonClick
+ */
+class BillDialogFragment(
+    private val user: User,
+    private val products: String,
+    private val totalPrice: String,
+    private val onPositiveButtonClick: () -> Unit
+) : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return activity?.let {
+            // Create dialog builder
+            val builder = AlertDialog.Builder(context)
+            // Inflate layout for dialog fragment
+            val dialogFragment = layoutInflater.inflate(R.layout.fragment_bill_dialog, null)
+            // Binding to fragment_bill_dialog
+            val binding = FragmentBillDialogBinding.bind(dialogFragment)
+            // Load user info
+            user.also {
+                binding.userName.text = it.name
+                binding.phoneNumber.text = it.phoneNumber
+                binding.address.text = it.address
+            }
+            // Load products
+            binding.products.text = products
+            // Load total price
+            binding.totalPrice.text = totalPrice
+            // Set layout for dialog
+            builder.setView(dialogFragment)
+                .setPositiveButton(getString(R.string.oke)) { _, _ ->
+                    // Confirm payment event
+                    onPositiveButtonClick()
+                }
+                .setNegativeButton(getString(R.string.cancel)) { _, _ -> }
+
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
+    }
+
+    companion object {
+        const val TAG = "BillDialog"
     }
 }
