@@ -62,6 +62,12 @@ dependencies {
     // Coil
     implementation("io.coil-kt:coil:1.1.1")
 
+    // Retrofit
+    val retrofitVersion = "2.9.0"
+    implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
+    // Retrofit with gson converter
+    implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
+
     // Import the BoM for the Firebase platform
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(platform("com.google.firebase:firebase-bom:32.4.1"))
@@ -70,4 +76,7 @@ dependencies {
     implementation("com.google.firebase:firebase-database")
     // Add the dependency for the Firebase Authentication library
     implementation("com.google.firebase:firebase-auth-ktx")
+    // Add the dependencies for the Firebase Cloud Messaging and Analytics libraries
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 }

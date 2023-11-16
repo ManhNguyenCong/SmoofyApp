@@ -36,6 +36,20 @@
     <string name="loggingNavTitle">Have an account?</string>
     <string name="rePasswordHint">Re-enter password</string>
     <string name="btnSubmitText">Add to cart</string>
+    <string name="setupUserInfoDialogTitle">Enter your information</string>
+    <string name="oke">Oke</string>
+    <string name="txtUserNameHint">Your name</string>
+    <string name="txtUserAddressHint">Your address</string>
+    <string name="txtUserPhoneNumberHint">Your phone number</string>
+    <string name="confirmOrderDialogTitle">Order confirmation</string>
+    <string name="confirmOrderDialogMessage">Are you sure you want to pay %s for %s?</string>
+    <string name="cancel">Cancel</string>
+    <string name="defaultTotalPriceText">0$</string>
+    <string name="billTitle">Smoofy Bill</string>
+    <string name="productsBillTitle">Products:</string>
+    <string name="addressBillTitle">Address:</string>
+    <string name="phoneNumberBillTitle">Phone number:</string>
+    <string name="fullNameBillTitle">Full name:</string>
 
     <string-array name="errorRegister">
         <item>Email/Password isn\'t correct!!!</item>

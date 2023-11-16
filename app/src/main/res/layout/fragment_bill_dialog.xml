@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/billTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TitleDialogFragment"
+            android:layout_marginTop="@dimen/margin_default"
+            android:paddingBottom="@dimen/margin_default"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/billTitle"/>
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/line1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_between_elements"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/billTitle" />
+
+        <TextView
+            android:id="@+id/userNameTitle"
+            style="@style/TitleDialogFragment"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/fullNameBillTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line1"/>
+
+        <TextView
+            android:id="@+id/userName"
+            style="@style/TitleDialogFragment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/userNameTitle"
+            app:layout_constraintTop_toBottomOf="@id/line1"
+            tools:text="@tools:sample/full_names" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/line2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_between_elements"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/userName" />
+
+        <TextView
+            android:id="@+id/phoneNumberTitle"
+            style="@style/TitleDialogFragment"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/phoneNumberBillTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line2" />
+
+        <TextView
+            android:id="@+id/phoneNumber"
+            style="@style/TitleDialogFragment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/phoneNumberTitle"
+            app:layout_constraintTop_toBottomOf="@id/line2"
+            tools:text="@tools:sample/us_phones" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/line3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_between_elements"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/phoneNumber" />
+
+        <TextView
+            android:id="@+id/addressTitle"
+            style="@style/TitleDialogFragment"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/addressBillTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line3" />
+
+        <TextView
+            android:id="@+id/address"
+            style="@style/TitleDialogFragment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/addressTitle"
+            app:layout_constraintTop_toBottomOf="@id/line3"
+            tools:text="@tools:sample/cities" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/line4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_between_elements"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/address"/>
+
+        <TextView
+            android:id="@+id/productsTitle"
+            android:textStyle="bold"
+            style="@style/TitleDialogFragment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/productsBillTitle"
+            app:layout_constraintEnd_toEndOf="@id/phoneNumberTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line4" />
+
+        <TextView
+            android:id="@+id/products"
+            style="@style/TitleDialogFragment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/productsTitle"
+            tools:text="Abc x 1\nAbc x 1\nAbc x 1" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/line5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_between_elements"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/products" />
+
+        <TextView
+            android:id="@+id/totalTitle"
+            style="@style/TitleDialogFragment"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/totalTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line5" />
+
+        <TextView
+            android:id="@+id/totalPrice"
+            style="@style/TitleDialogFragment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_between_elements"
+            android:textAlignment="viewEnd"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/totalTitle"
+            app:layout_constraintTop_toBottomOf="@id/line5"
+            tools:text="0$" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

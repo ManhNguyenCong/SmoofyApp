@@ -17,4 +17,10 @@
         <item name="android:textAppearance">@style/TextAppearance.AppCompat.Widget.ActionBar.Title</item>
         <item name="android:layout_marginStart">@dimen/margin_between_elements</item>
     </style>
+
+    <style name="TitleDialogFragment">
+        <item name="android:textSize">18sp</item>
+        <item name="android:layout_marginBottom">@dimen/margin_between_elements</item>
+        <item name="android:layout_marginStart">@dimen/margin_between_elements</item>
+    </style>
 </resources>

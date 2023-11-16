@@ -6,8 +6,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.example.smoothieshopapp.model.Cart
+import com.example.smoothieshopapp.model.NotificationPush
 import com.example.smoothieshopapp.model.Smoothie
+import com.example.smoothieshopapp.model.User
+import com.example.smoothieshopapp.network.SmoothieApi
+import com.google.android.gms.tasks.Task
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -15,9 +20,12 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.google.firebase.database.snapshots
+import com.google.firebase.installations.remote.TokenResult
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
-private const val TAG = "TAG_TEST"
+private const val TAG = "SmoothieViewModel"
 
 class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
     /**
@@ -82,9 +90,6 @@ class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
                 val mapSmoothieRemoved = snapshot.getValue<Map<String, Any?>>()
 
                 if (keySmoothieRemoved != null && mapSmoothieRemoved != null) {
-                    // Convert from Map to Smoothie
-                    val smoothie = Smoothie(snapshot.key.toString(), mapSmoothieRemoved)
-
                     // Create a medium list
                     val smoothieList = mutableListOf<Smoothie>()
 
@@ -324,7 +329,7 @@ class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
                 object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         // If first update isn't complete
-                        if(!isComplete) {
+                        if (!isComplete) {
                             // Get current quantity in stock
                             val current = snapshot.getValue<Int>() ?: 0
                             // Update quantity in stock
@@ -380,6 +385,122 @@ class SmoothieViewModel(private val database: DatabaseReference) : ViewModel() {
      */
     fun removeSmoothieFromCart(userId: String, smoothieId: String): Boolean {
         return database.child("users/$userId/cart").child(smoothieId).removeValue().isSuccessful
+    }
+
+    /**
+     * This function is used to get user information by user id
+     *
+     * @param userId
+     */
+    fun getUserInformation(userId: String): LiveData<User> {
+        val user = MutableLiveData<User>()
+        database.child("users/$userId").addValueEventListener(
+            object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    // Get user as a map
+                    val userMap = snapshot.getValue<Map<String, Any?>>()
+                    // Convert map to object and update livedata
+                    userMap?.also {
+                        user.value = User(
+                            userId,
+                            it["name"].toString(),
+                            it["address"].toString(),
+                            it["phoneNumber"].toString()
+                        )
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d(TAG, "onCancelled: " + error.toException())
+                }
+
+            }
+        )
+
+        return user
+    }
+
+    /**
+     * This function is used to validate user information entry(no empty)
+     *
+     * @param userName
+     * @param address
+     * @param phoneNumber
+     */
+    fun validUserInfoEntry(userName: String, address: String, phoneNumber: String): Boolean {
+        return userName.isNotEmpty() && address.isNotEmpty() && phoneNumber.isNotEmpty()
+    }
+
+    /**
+     * This function is used to update new information to firebase
+     *
+     * @param userId
+     * @param name
+     * @param address
+     * @param phoneNumber
+     */
+    fun updateNewUserInformation(
+        userId: String,
+        name: String,
+        address: String,
+        phoneNumber: String
+    ) {
+        // Set name
+        database.child("users/$userId/name").setValue(name)
+        // Set address
+        database.child("users/$userId/address").setValue(address)
+        // Set phone number
+        database.child("users/$userId/phoneNumber").setValue(phoneNumber)
+    }
+
+    /**
+     * This function is used to send a notification to FCM
+     */
+    fun sendNotification(notificationPush: NotificationPush) {
+        viewModelScope.launch {
+            try {
+                SmoothieApi.notificationService.postNotification(notificationPush)
+//                if(response.isSuccessful) {
+//                    Log.d(TAG, "sendNotification: ${Gson().toJson(response)}")
+//                } else {
+//                    Log.e(TAG, "sendNotification: ${response.errorBody()}" )
+//                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "sendNotification: " + e.message)
+            }
+        }
+    }
+
+    /**
+     * This function is used to remove all smoothies in cart
+     *
+     * @param userId
+     */
+    fun removeSmoothiesInCart(userId: String) {
+        database.child("users/$userId/cart").removeValue()
+    }
+
+    /**
+     * This function is used to add bill to database
+     *
+     * @param userId
+     * @param cart
+     */
+    fun addBill(userId: String, cart: List<Cart>) {
+        database.child("bills").push().apply {
+            // User id
+            this.child("userId").setValue(userId)
+            // Convert smoothies in cart to map
+            val mapSmoothiesInCart = mutableMapOf<String, Int>()
+            cart.forEach {
+                mapSmoothiesInCart[it.smoothieId] = it.quantity
+            }
+            // List smoothies and quantity of them
+            this.child("smoothies").setValue(mapSmoothiesInCart)
+            // Status of bill (0 - wait confirm,...)
+            this.child("status").setValue(0)
+        }
     }
 }
 
