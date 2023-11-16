@@ -79,9 +79,6 @@ class LoggingFragment : Fragment() {
             binding.email.setText(args.email)
             binding.password.setText(args.password)
         }
-
-        binding.email.setText("abc@gmail.com")
-        binding.password.setText("12345678")
     }
 
     /**
