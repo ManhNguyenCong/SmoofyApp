@@ -1,6 +1,7 @@
 package com.example.smoothieshopapp.ui.moothiescreen.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,14 +11,15 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.smoothieshopapp.R
+import com.example.smoothieshopapp.data.network.SmoothieApi
+import com.example.smoothieshopapp.data.repository.SmoothieRepository
+import com.example.smoothieshopapp.data.repository.UserRepository
 import com.example.smoothieshopapp.databinding.FragmentSmoothieListBinding
-import com.example.smoothieshopapp.network.SmoothieApi
 import com.example.smoothieshopapp.ui.moothiescreen.adapter.SmoothieAdapter
 import com.example.smoothieshopapp.ui.moothiescreen.adapter.SpecialitiesSmoothieAdapter
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModel
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModelFactory
 import com.example.smoothieshopapp.util.findNavControllerSafely
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseUser
 
 /**
@@ -34,7 +36,7 @@ class SmoothieListFragment : Fragment() {
 
     // View model
     private val viewModel: SmoothieViewModel by activityViewModels {
-        SmoothieViewModelFactory(SmoothieApi.dbRef)
+        SmoothieViewModelFactory(UserRepository(), SmoothieRepository())
     }
 
     // Init specialities smoothie adapter
@@ -48,21 +50,11 @@ class SmoothieListFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
 
         // Inflate the layout for this fragment
         binding = FragmentSmoothieListBinding.inflate(layoutInflater)
-
-        // When open app, bottom navigation will be gone, so need display it again
-        activity?.findViewById<View>(R.id.mainContent)
-            ?.findViewById<BottomNavigationView>(R.id.bottomNavView)
-            ?.let {
-                if (it.visibility == View.GONE) {
-                    it.visibility = View.VISIBLE
-                }
-            }
 
         // Set auto scroll toolbar
         autoScrollToolbar()
@@ -84,8 +76,8 @@ class SmoothieListFragment : Fragment() {
         user = SmoothieApi.firebaseAuth.currentUser
 
         // Binding data for RecyclerViews
-        bindSpecialitiesRecyclerView()
-        bindAllProductsRecyclerView()
+        bindSpecialities()
+        bindAllProducts()
     }
 
     /**
@@ -127,56 +119,64 @@ class SmoothieListFragment : Fragment() {
      * This function is used to set up adapter for allProductsRecyclerView
      */
     private fun setAllProductsRecyclerView() {
-        smoothieAdapter = SmoothieAdapter(
-            showDetailSmoothie = { id ->
-                // Navigation to detail smoothie fragment
-                val action =
-                    SmoothieListFragmentDirections.actionSmoothieListFragmentToDetailSmoothieFragment(
-                        id
+        smoothieAdapter = SmoothieAdapter(showDetailSmoothie = { id ->
+            // Navigation to detail smoothie fragment
+            val action =
+                SmoothieListFragmentDirections.actionSmoothieListFragmentToDetailSmoothieFragment(
+                    id
+                )
+            findNavControllerSafely()?.navigate(action)
+        }, bindFavorite = { smoothie, imgView ->
+            viewModel.getFavorites(onSuccess = { favorites ->
+                val isFavorite = favorites?.map { it.id }?.contains(smoothie.id) ?: false
+                if (isFavorite) {
+                    // Set drawable favorite
+                    imgView.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            resources, R.drawable.ic_round_favorite_24, null
+                        )
                     )
-                findNavControllerSafely()?.navigate(action)
-            },
-            setFavoriteSmoothie = { smoothieId, imgView ->
-                // Set current favorite status
-                user?.also { user ->
-                    viewModel.getAllFavoriteByUserId(user.uid)
-                        .observe(this.viewLifecycleOwner) {
-                            if (smoothieId in it) {
-                                // Set drawable favorite
-                                imgView.setImageDrawable(
-                                    ResourcesCompat.getDrawable(
-                                        resources,
-                                        R.drawable.ic_round_favorite_24,
-                                        null
-                                    )
-                                )
-                                // Event remove favorite smoothie
-                                imgView.setOnClickListener {
-                                    viewModel.removeFavorite(
-                                        user.uid,
-                                        smoothieId
-                                    )
-                                }
-                            } else {
-                                // Set drawable don't favorite
-                                imgView.setImageDrawable(
-                                    ResourcesCompat.getDrawable(
-                                        resources,
-                                        R.drawable.ic_round_favorite_border_24,
-                                        null
-                                    )
-                                )
-                                // Set event add favorite smoothie
-                                imgView.setOnClickListener {
-                                    viewModel.addFavorite(
-                                        user.uid,
-                                        smoothieId
-                                    )
-                                }
-                            }
-                        }
+                } else {
+                    // Set drawable don't favorite
+                    imgView.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            resources, R.drawable.ic_round_favorite_border_24, null
+                        )
+                    )
                 }
+            }, onFailure = {
+                Log.d("Test Smoothie", "setAllProductsRecyclerView: ")
             })
+
+        }, setFavorite = { smoothie, imgView ->
+            viewModel.getFavorites(onSuccess = { favorites ->
+                val isFavorite = favorites?.map { it.id }?.contains(smoothie.id) ?: false
+
+                if (isFavorite) {
+                    viewModel.removeFavorite(smoothie, favorites ?: listOf(), onSuccess = {
+                        imgView.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                resources, R.drawable.ic_round_favorite_border_24, null
+                            )
+                        )
+                    }, onFailure = {
+                        Log.d("Test Smoothie", "bind: $it")
+                    })
+                } else {
+                    viewModel.setFavorite(smoothie, favorites ?: listOf(), onSuccess = {
+                        imgView.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                resources, R.drawable.ic_round_favorite_24, null
+                            )
+                        )
+                    }, onFailure = {
+                        Log.d("Test Smoothie", "bind: $it")
+                    })
+                }
+            }, onFailure = {
+                Log.d("Test Smoothie", "setAllProductsRecyclerView: $it")
+            })
+        })
 
         binding.allProductsRecyclerView.adapter = smoothieAdapter
     }
@@ -197,30 +197,22 @@ class SmoothieListFragment : Fragment() {
     /**
      * This function is used to summit list for specialityAdapter
      */
-    private fun bindSpecialitiesRecyclerView() {
-        // Todo summitList for specialityAdapter
-        viewModel.getAllSmoothies().observe(this.viewLifecycleOwner) { smoothies ->
-            specialityAdapter?.also {
-                it.submitList(
-                    smoothies.filter { smoothie ->
-                        smoothie.rating >= 4
-                    }.sortedByDescending { smoothie -> smoothie.rating }
-                )
-            }
-        }
+    private fun bindSpecialities() {
+        viewModel.getSpecialSmoothies(onSuccess = {
+            specialityAdapter?.submitList(it)
+        }, onFailure = {
+            Log.d("Test Smoothie", "bindSpecialities: $it")
+        })
     }
 
     /**
      * This function is used to summit list for smoothieAdapter
      */
-    private fun bindAllProductsRecyclerView() {
-        // Todo summitList for specialityAdapter
-        viewModel.getAllSmoothies().observe(this.viewLifecycleOwner) { smoothies ->
-            smoothieAdapter?.also {
-                it.submitList(
-                    smoothies.sortedBy { smoothie -> smoothie.name }
-                )
-            }
-        }
+    private fun bindAllProducts() {
+        viewModel.getAllSmoothies(onSuccess = {
+            smoothieAdapter?.submitList(it)
+        }, onFailure = {
+            Log.d("Test Smoothie", "bindAllProducts: $it")
+        })
     }
 }

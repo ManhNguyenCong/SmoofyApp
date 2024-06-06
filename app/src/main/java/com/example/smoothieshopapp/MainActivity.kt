@@ -1,30 +1,41 @@
 package com.example.smoothieshopapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.example.smoothieshopapp.data.model.User
+import com.example.smoothieshopapp.data.network.SmoothieApi
+import com.example.smoothieshopapp.data.repository.SmoothieRepository
+import com.example.smoothieshopapp.data.repository.UserRepository
 import com.example.smoothieshopapp.databinding.ActivityMainBinding
-import com.google.android.gms.tasks.OnCompleteListener
+import com.example.smoothieshopapp.ui.loginscreen.LoginActivity
+import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModel
+import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModelFactory
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.database
-import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
+
+    private val viewModel: SmoothieViewModel by viewModels {
+        SmoothieViewModelFactory(UserRepository(), SmoothieRepository())
+    }
+
+    private var userCurrent: User? = null
+        set(value) {
+            field = value
+            setNavView(field)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +44,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Retrieve NavController from the NavHostFragment
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
         // Set navigation view onclick
@@ -42,6 +53,33 @@ class MainActivity : AppCompatActivity() {
 
         setBottomNavViewItemOnClick()
 
+        SmoothieApi.firebaseAuth.addAuthStateListener {
+            it.currentUser?.uid?.let { uid ->
+                viewModel.getUserByUID(
+                    uid,
+                    onSuccess = { user ->
+                        userCurrent = user
+                    },
+                    onFailure = { mgs ->
+                        Log.d("Test Smoothie", "onCreate: $mgs")
+                    })
+            } ?: setNavView(null)
+        }
+    }
+
+
+    private fun setNavView(user: User?) {
+        val navView = findViewById<NavigationView>(R.id.navigationView)
+        val tvUserName = navView?.getHeaderView(0)?.findViewById<TextView>(R.id.userName)
+        if (user == null) {
+            navView.menu.findItem(R.id.loginMenuItem).title = "Login"
+            tvUserName?.text = ""
+            return
+        }
+
+        tvUserName?.text = user.name ?: ""
+        navView.menu.findItem(R.id.loginMenuItem).title = "Logout"
+        setNavViewItemOnClick()
     }
 
     /**
@@ -55,22 +93,12 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Profile isn't completed now", Toast.LENGTH_SHORT).show()
                 }
 
-                R.id.messageMenuItem -> {
-                    Toast.makeText(this, "Messages isn't completed now", Toast.LENGTH_SHORT).show()
-                }
-
-                R.id.promotionsMenuItem -> {
-                    Toast.makeText(this, "Promotions isn't completed now", Toast.LENGTH_SHORT)
-                        .show()
-                }
-
-                R.id.favoritesMenuItem -> {
-                    Toast.makeText(this, "Favorites isn't completed now", Toast.LENGTH_SHORT).show()
-                }
-
-                R.id.categoriesMenuItem -> {
-                    Toast.makeText(this, "Categories isn't completed now", Toast.LENGTH_SHORT)
-                        .show()
+                R.id.loginMenuItem -> {
+                    // TODO check current user, if true logout
+                    if (userCurrent != null) {
+                        SmoothieApi.firebaseAuth.signOut()
+                    }
+                    startActivity(Intent(this, LoginActivity::class.java))
                 }
             }
             // Close navigation view
@@ -84,43 +112,12 @@ class MainActivity : AppCompatActivity() {
      *
      */
     private fun setBottomNavViewItemOnClick() {
-        // Get current user
-        val user = Firebase.auth.currentUser
-        // Set user name in navigation view
-        user?.also {
-            Firebase.database.reference.child("users/${user.uid}/name").addValueEventListener(
-                object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val name = snapshot.value.toString()
-                        findViewById<NavigationView>(R.id.navigationView)
-                            ?.getHeaderView(0)
-                            ?.findViewById<TextView>(R.id.userName)
-                            ?.text = name.ifEmpty {
-                            "User name"
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        Log.d("TAG", "onCancelled: " + error.toException())
-                    }
-
-                }
-            )
-
-        }
-
-
         // Get bottom navigation view
         val bottomNavView =
             binding.mainContent.findViewById<BottomNavigationView>(R.id.bottomNavView) ?: return
-
-        // Set don't select menu item: detailSmoothieFragment
-        bottomNavView.menu.findItem(R.id.detailSmoothieFragment).isEnabled = false
-        // Setup nav controller for bottom nav controller
-        // Notes: id of menu item must be the same as id of fragment in nav_graph
         bottomNavView.setupWithNavController(navController)
-        // When use setupWithNavController, navController don't navigate to
-        // new fragment, it can born a bug, so need navigate it
+
+        bottomNavView.menu.findItem(R.id.detailSmoothieFragment).isEnabled = false
         bottomNavView.setOnItemSelectedListener {
             navController.navigate(it.itemId)
             true

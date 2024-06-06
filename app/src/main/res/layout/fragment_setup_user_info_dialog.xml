@@ -6,7 +6,7 @@
 
         <variable
             name="userInfo"
-            type="com.example.smoothieshopapp.model.User" />
+            type="com.example.smoothieshopapp.data.model.User" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

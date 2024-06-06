@@ -34,7 +34,7 @@
     <string name="btnRegisterText">Register</string>
     <string name="loggingNavText">Logging</string>
     <string name="loggingNavTitle">Have an account?</string>
-    <string name="rePasswordHint">Re-enter password</string>
+    <string name="confirmPassHint">Confirm password</string>
     <string name="btnSubmitText">Add to cart</string>
     <string name="setupUserInfoDialogTitle">Enter your information</string>
     <string name="oke">Oke</string>
@@ -50,6 +50,8 @@
     <string name="addressBillTitle">Address:</string>
     <string name="phoneNumberBillTitle">Phone number:</string>
     <string name="fullNameBillTitle">Full name:</string>
+    <string name="login">Login</string>
+    <string name="added_to_cart">Added to cart</string>
 
     <string-array name="errorRegister">
         <item>Email/Password isn\'t correct!!!</item>

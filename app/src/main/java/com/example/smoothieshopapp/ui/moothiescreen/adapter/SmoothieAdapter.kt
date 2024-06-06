@@ -7,20 +7,21 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smoothieshopapp.databinding.SmoothieItemListBinding
-import com.example.smoothieshopapp.model.Smoothie
-import com.example.smoothieshopapp.model.priceFormatted
-import com.example.smoothieshopapp.model.ratingFormatted
+import com.example.smoothieshopapp.data.model.Smoothie
+import com.example.smoothieshopapp.data.model.priceFormatted
+import com.example.smoothieshopapp.data.model.ratingFormatted
 import com.example.smoothieshopapp.util.loadImageWithImageUrl
 
 /**
  * This class is used to set adapter for smoothie recycler view
  *
  * @param showDetailSmoothie
- * @param setFavoriteSmoothie
+ * @param bindFavorite
  */
 class SmoothieAdapter(
     private val showDetailSmoothie: (String) -> Unit,
-    private val setFavoriteSmoothie: (String, ImageView) -> Unit
+    private val bindFavorite: (Smoothie, ImageView) -> Unit,
+    private val setFavorite: (Smoothie, ImageView) -> Unit
 ) : ListAdapter<Smoothie, SmoothieAdapter.SmoothieViewHolder>(DiffCallback) {
     class SmoothieViewHolder(private val binding: SmoothieItemListBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -30,12 +31,13 @@ class SmoothieAdapter(
          *
          * @param smoothie
          * @param showDetailSmoothie
-         * @param setFavoriteSmoothie
+         * @param bindFavorite
          */
         fun bind(
             smoothie: Smoothie,
             showDetailSmoothie: (String) -> Unit,
-            setFavoriteSmoothie: (String, ImageView) -> Unit
+            bindFavorite: (Smoothie, ImageView) -> Unit,
+            setFavorite: (Smoothie, ImageView) -> Unit,
         ) {
             // Set events onclick for item
             binding.image.setOnClickListener {
@@ -54,7 +56,10 @@ class SmoothieAdapter(
             binding.image.loadImageWithImageUrl(smoothie.imageUrl)
 
             // Set icon favorite for item
-            setFavoriteSmoothie(smoothie.id, binding.btnLike)
+            bindFavorite(smoothie, binding.btnLike)
+            binding.btnLike.setOnClickListener {
+                setFavorite(smoothie, binding.btnLike)
+            }
         }
     }
 
@@ -70,7 +75,8 @@ class SmoothieAdapter(
         holder.bind(
             getItem(position),
             showDetailSmoothie,
-            setFavoriteSmoothie
+            bindFavorite,
+            setFavorite
         )
     }
 

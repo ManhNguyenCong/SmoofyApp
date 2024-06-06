@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smoothieshopapp.databinding.SpecialityItemListBinding
-import com.example.smoothieshopapp.model.Smoothie
+import com.example.smoothieshopapp.data.model.Smoothie
 import com.example.smoothieshopapp.util.loadImageWithImageUrl
 
 class SpecialitiesSmoothieAdapter(

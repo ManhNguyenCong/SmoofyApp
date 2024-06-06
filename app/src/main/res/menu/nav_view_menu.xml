@@ -7,20 +7,8 @@
         android:title="@string/profileMenuItemTitle"
         android:icon="@drawable/ic_baseline_person_outline_24"
         app:showAsAction="ifRoom"/>
-    <item android:id="@+id/messageMenuItem"
-        android:title="@string/messageMenuItemTitle"
-        android:icon="@drawable/ic_outline_email_24"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/promotionsMenuItem"
-        android:title="@string/promotionsMenuItemTitle"
-        android:icon="@drawable/ic_baseline_card_giftcard_24"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/favoritesMenuItem"
-        android:title="@string/favoritesMenuItemTitle"
-        android:icon="@drawable/ic_round_favorite_border_24"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/categoriesMenuItem"
-        android:title="@string/categoriesMenuItemTitle"
-        android:icon="@drawable/ic_baseline_grid_view_24"
+    <item android:id="@+id/loginMenuItem"
+        android:title="@string/login"
+        android:icon="@drawable/ic_login"
         app:showAsAction="ifRoom"/>
 </menu>

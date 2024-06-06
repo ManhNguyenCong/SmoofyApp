@@ -1,6 +1,7 @@
 package com.example.smoothieshopapp.ui.moothiescreen.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,17 +13,17 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.navArgs
 import com.example.smoothieshopapp.R
+import com.example.smoothieshopapp.data.model.Cart
+import com.example.smoothieshopapp.data.model.Smoothie
+import com.example.smoothieshopapp.data.network.SmoothieApi
+import com.example.smoothieshopapp.data.repository.SmoothieRepository
+import com.example.smoothieshopapp.data.repository.UserRepository
 import com.example.smoothieshopapp.databinding.FragmentDetailSmoothieBinding
-import com.example.smoothieshopapp.model.Smoothie
-import com.example.smoothieshopapp.network.SmoothieApi
 import com.example.smoothieshopapp.ui.moothiescreen.adapter.SpecialitiesSmoothieAdapter
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModel
 import com.example.smoothieshopapp.ui.moothiescreen.viewmodel.SmoothieViewModelFactory
 import com.example.smoothieshopapp.util.findNavControllerSafely
 import com.example.smoothieshopapp.util.loadImageWithImageUrl
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
 
 class DetailSmoothieFragment : Fragment() {
 
@@ -34,11 +35,13 @@ class DetailSmoothieFragment : Fragment() {
 
     // View model
     private val viewModel: SmoothieViewModel by activityViewModels {
-        SmoothieViewModelFactory(SmoothieApi.dbRef)
+        SmoothieViewModelFactory(UserRepository(), SmoothieRepository())
     }
 
     // Current user
-    private var user: FirebaseUser? = null
+    private var uid: String? = SmoothieApi.firebaseAuth.currentUser?.uid
+    private var favorites: List<Smoothie>? = null
+    private var carts: List<Cart>? = null
 
     // Smoothie which has id is args.id
     private var smoothie: Smoothie? = null
@@ -71,14 +74,27 @@ class DetailSmoothieFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get current user
-        user = SmoothieApi.firebaseAuth.currentUser
-
         //Get smoothie by id
-        viewModel.getSmoothieById(args.id).observe(this.viewLifecycleOwner) {
-            smoothie = it
-            binding()
-        }
+        viewModel.getSmoothieById(
+            args.id,
+            onSuccess = { smoothie ->
+                this.smoothie = smoothie
+                bind()
+            },
+            onFailure = {
+                Log.d("Test Smoothie", "onViewCreated: $it")
+            }
+        )
+
+        //SubmitList for recommend products recycler view
+        viewModel.getRandomSmoothies(
+            onSuccess = {
+                adapter?.submitList(it)
+            },
+            onFailure = {
+                Log.d("Test Smoothie", "onViewCreated: $it")
+            }
+        )
     }
 
     /**
@@ -107,7 +123,7 @@ class DetailSmoothieFragment : Fragment() {
             // Get quantity
             var quantity = binding.quantity.text.toString().toInt()
             // Reduce quantity
-            if (quantity > 0) {
+            if (quantity > 1) {
                 quantity--
                 binding.quantity.text = quantity.toString()
             }
@@ -147,103 +163,120 @@ class DetailSmoothieFragment : Fragment() {
      * recommend products recycler view
      *
      */
-    private fun binding() {
+    private fun bind() {
         //Todo set smoothie information
-        user?.also { user ->
-            smoothie?.also { smoothie ->
-                // Set name smoothie
-                binding.name.text = smoothie.name
-                // Load image
-                binding.image.loadImageWithImageUrl(smoothie.imageUrl)
 
-                // Set favorite icon
-                viewModel.getAllFavoriteByUserId(Firebase.auth.currentUser?.uid ?: "")
-                    .observe(this.viewLifecycleOwner) { favorites ->
-                        if (smoothie.id in favorites) {
-                            // Set drawable favorite
-                            binding.btnLike.setImageDrawable(
-                                ResourcesCompat.getDrawable(
-                                    resources,
-                                    R.drawable.ic_round_favorite_24,
-                                    null
-                                )
-                            )
-                            // Set event remove favorite smoothie
-                            binding.btnLike.setOnClickListener {
-                                viewModel.removeFavorite(
-                                    user.uid,
-                                    smoothie.id
-                                )
-                            }
+        smoothie?.also { smoothie ->
+            // Set name smoothie
+            binding.name.text = smoothie.name
+            // Load image
+            binding.image.loadImageWithImageUrl(smoothie.imageUrl)
+
+            // Set rating
+            binding.ratingBar.rating = smoothie.rating
+            // Set price
+            binding.price.text = String.format("%.2f$", smoothie.price)
+
+            bindFavorite(smoothie)
+
+            uid?.let {
+                viewModel.getCart(
+                    uid = it,
+                    onSuccess = { carts ->
+                        this.carts = carts
+
+                        val inCart = carts.map { cart -> cart.smoothie.id }.contains(smoothie.id)
+                        binding.btnSubmit.isEnabled = !inCart
+                        binding.btnSubmit.text = if (inCart) {
+                            getString(R.string.added_to_cart)
                         } else {
-                            // Set drawable don't favorite
-                            binding.btnLike.setImageDrawable(
-                                ResourcesCompat.getDrawable(
-                                    resources,
-                                    R.drawable.ic_round_favorite_border_24,
-                                    null
-                                )
-                            )
-                            // Set event add favorite smoothie
-                            binding.btnLike.setOnClickListener {
-                                viewModel.addFavorite(
-                                    user.uid,
-                                    smoothie.id
-                                )
-                            }
+                            getString(R.string.btnSubmitText)
                         }
-                    }
-
-                // Set rating
-                binding.ratingBar.rating = smoothie.rating
-                // Set price
-                binding.price.text = String.format("%.2f$", smoothie.price)
+                    },
+                    onFailure = {
+                        Log.d("Test Smoothie", "bind: $it")
+                    })
             }
         }
+    }
 
-        //SubmitList for recommend products recycler view
-        viewModel.getAllSmoothies().observe(this.viewLifecycleOwner) { smoothies ->
-            adapter?.also {
-                it.submitList(
-                    if (smoothies.size > 5) {
-                        val indexRandom = (0..(smoothies.size - 1 - 5)).random()
-                        smoothies.subList(indexRandom, indexRandom + 4)
-                    } else {
-                        smoothies
-                    }
+    private fun bindFavorite(smoothie: Smoothie) {
+        viewModel.getFavorites(
+            onSuccess = { smoothies ->
+                favorites = smoothies
+
+                val isFavorite = smoothies?.map { it.id }?.contains(smoothie.id) ?: false
+                // Set drawable favorite
+                binding.btnLike.setImageDrawable(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        if (isFavorite) R.drawable.ic_round_favorite_24 else R.drawable.ic_round_favorite_border_24,
+                        null
+                    )
                 )
+                binding.btnLike.setOnClickListener {
+                    if (isFavorite) {
+                        viewModel.removeFavorite(
+                            smoothie,
+                            favorites ?: listOf(),
+                            onSuccess = {
+                                bindFavorite(smoothie)
+                            },
+                            onFailure = {
+                                Log.d("Test Smoothie", "bind: $it")
+                            })
+                    } else {
+                        viewModel.setFavorite(
+                            smoothie,
+                            favorites ?: listOf(),
+                            onSuccess = {
+                                bindFavorite(smoothie)
+                            },
+                            onFailure = {
+                                Log.d("Test Smoothie", "bind: $it")
+                            })
+                    }
+                }
+
+            },
+            onFailure = {
+                Log.d("Test Smoothie", "bind: $it")
             }
-        }
+        )
     }
 
     /**
      * This function is used to add smoothie to cart
      */
     private fun addSmoothieToCart() {
-
-        smoothie?.also { smoothie ->
-            user?.also { user ->
-                // Get quantity
-                val quantityInCart = binding.quantity.text.toString().toInt()
-
-                // If smoothie is added to cart, don't add again. If you want increase quantity,
-                // you can go to cart and increase it
-                viewModel.isExistedSmoothieInCart(user.uid, smoothie.id)
-                    .observe(this.viewLifecycleOwner) { isExisted ->
-                        if (isExisted) {
-                            Toast.makeText(
-                                requireContext(),
-                                "${smoothie.name} is added to your cart",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            // Add smoothie to cart
-                            viewModel.addSmoothieToCart(user.uid, smoothie.id, quantityInCart)
-                            // Reduce quantityInStock
-                            viewModel.updateQuantityInStock(smoothie.id, quantityInCart)
-                        }
-                    }
-            }
+        if (uid == null) {
+            Toast.makeText(
+                requireContext(),
+                "Need login to add smoothies to your cart!!!",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
         }
+
+        val smoothie = this.smoothie ?: return
+        val quantity = binding.quantity.text.toString().toIntOrNull() ?: return
+        val carts = this.carts ?: return
+
+        viewModel.addToCart(
+            uid!!,
+            cart = Cart(
+                smoothie.copy(quantityInStock = smoothie.quantityInStock - quantity),
+                quantity
+            ),
+            carts,
+            onSuccess = {
+                Toast.makeText(requireContext(), "Add to cart successful!", Toast.LENGTH_SHORT)
+                    .show()
+                findNavControllerSafely()?.navigate(R.id.cartFragment)
+            },
+            onFailure = {
+                Log.d("Test Smoothie", "addSmoothieToCart: $it")
+            }
+        )
     }
 }

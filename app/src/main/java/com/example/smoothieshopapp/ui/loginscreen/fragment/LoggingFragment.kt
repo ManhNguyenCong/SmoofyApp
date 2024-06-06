@@ -7,24 +7,22 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.navArgs
+import androidx.fragment.app.add
+import androidx.fragment.app.commit
+import androidx.fragment.app.replace
 import com.example.smoothieshopapp.R
+import com.example.smoothieshopapp.data.repository.UserRepository
 import com.example.smoothieshopapp.databinding.FragmentLoggingBinding
-import com.example.smoothieshopapp.network.SmoothieApi
 import com.example.smoothieshopapp.ui.loginscreen.viewmodel.LoginViewModel
 import com.example.smoothieshopapp.ui.loginscreen.viewmodel.LoginViewModelFactory
-import com.example.smoothieshopapp.util.findNavControllerSafely
 
 class LoggingFragment : Fragment() {
-    // Arguments of LoggingFragment in nav_graph
-    private val args: LoggingFragmentArgs by navArgs()
-
     // Binding to fragment_logging
     private lateinit var binding: FragmentLoggingBinding
 
     // View model
     private val viewModel: LoginViewModel by activityViewModels {
-        LoginViewModelFactory(SmoothieApi.firebaseAuth)
+        LoginViewModelFactory(UserRepository())
     }
 
     override fun onCreateView(
@@ -47,8 +45,7 @@ class LoggingFragment : Fragment() {
 
         // Set event onclick for button login
         binding.btnLogin.setOnClickListener {
-
-            if (isEntryValid()) {
+            if (entryValid()) {
                 // Sign in
                 signIn()
             } else {
@@ -63,8 +60,10 @@ class LoggingFragment : Fragment() {
 
         // Set event onclick to navigate to register
         binding.registerNav.setOnClickListener {
-            val action = LoggingFragmentDirections.actionLoggingFragmentToRegisterFragment()
-            findNavControllerSafely()?.navigate(action)
+            activity?.supportFragmentManager?.commit {
+                setReorderingAllowed(true)
+                replace<RegisterFragment>(R.id.fragmentContainerView)
+            }
         }
 
         return binding.root
@@ -72,19 +71,12 @@ class LoggingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // If navigate from register fragment after register successful,
-        // fill email and password
-        if (args.email != "none" && args.password != "none") {
-            binding.email.setText(args.email)
-            binding.password.setText(args.password)
-        }
     }
 
     /**
      * This function is used to validate email and password
      */
-    private fun isEntryValid(): Boolean {
+    private fun entryValid(): Boolean {
         return viewModel.loginEntryValid(
             binding.email.text.toString(),
             binding.password.text.toString()
@@ -98,11 +90,14 @@ class LoggingFragment : Fragment() {
         viewModel.signIn(
             binding.email.text.toString(),
             binding.password.text.toString()
-        ) { isSuccessful ->
-            if(isSuccessful) {
-                // Navigation to SmoothieListFragment()
-                val action = LoggingFragmentDirections.actionLoggingFragmentToSmoothieListFragment()
-                findNavControllerSafely()?.navigate(action)
+        ).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Toast.makeText(
+                    requireContext(),
+                    "Login successful!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                activity?.finish()
             } else {
                 // Notification error
                 Toast.makeText(
