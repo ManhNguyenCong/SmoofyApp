@@ -9,13 +9,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smoothieshopapp.R
 import com.example.smoothieshopapp.databinding.SmoothiePayItemListBinding
-import com.example.smoothieshopapp.model.Cart
+import com.example.smoothieshopapp.data.model.Cart
+import com.example.smoothieshopapp.data.model.priceFormatted
+import com.example.smoothieshopapp.util.loadImageWithImageUrl
 
 class SmoothiePayAdapter(
-    private val displaySmoothieById: (String, TextView, TextView, ImageView) -> Unit,
-    private val onClickBtnIncrease: (String, String, Int) -> Unit,
-    private val onClickBtnReduce: (String, String, Int) -> Unit,
-    private val onClickBtnRemove: (String, String, Int) -> Unit
+    private val onClickBtnIncrease: (Cart) -> Unit,
+    private val onClickBtnReduce: (Cart) -> Unit,
+    private val onClickBtnRemove: (Cart) -> Unit
 ) : ListAdapter<Cart, SmoothiePayAdapter.SmoothiePayViewHolder>(DiffCallback) {
     class SmoothiePayViewHolder(private val binding: SmoothiePayItemListBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -24,44 +25,27 @@ class SmoothiePayAdapter(
          */
         fun bind(
             cart: Cart,
-            displaySmoothieById: (String, TextView, TextView, ImageView) -> Unit,
-            onClickBtnIncrease: (String, String, Int) -> Unit,
-            onClickBtnReduce: (String, String, Int) -> Unit,
-            onClickBtnRemove: (String, String, Int) -> Unit
+            onClickBtnIncrease: (Cart) -> Unit,
+            onClickBtnReduce: (Cart) -> Unit,
+            onClickBtnRemove: (Cart) -> Unit
         ) {
-            // Set name and price
-            displaySmoothieById(
-                cart.smoothieId,
-                binding.name,
-                binding.price,
-                binding.image
-            )
+            binding.name.text = cart.smoothie.name
+            binding.price.text = cart.smoothie.priceFormatted()
+            binding.image.loadImageWithImageUrl(cart.smoothie.imageUrl)
 
             // Set quantity
             binding.quantity.text = cart.quantity.toString()
 
             // Set event onclick for btnIncrease and btnReduce
             binding.btnIncrease.setOnClickListener {
-                onClickBtnIncrease(
-                    cart.userId,
-                    cart.smoothieId,
-                    cart.quantity
-                )
+                onClickBtnIncrease(cart)
             }
             binding.btnReduce.setOnClickListener {
-                onClickBtnReduce(
-                    cart.userId,
-                    cart.smoothieId,
-                    cart.quantity
-                )
+                onClickBtnReduce(cart)
             }
             // Set event onclick for btnRemove
             binding.btnRemove.setOnClickListener {
-                onClickBtnRemove(
-                    cart.userId,
-                    cart.smoothieId,
-                    cart.quantity
-                )
+                onClickBtnRemove(cart)
             }
         }
     }
@@ -78,7 +62,6 @@ class SmoothiePayAdapter(
     override fun onBindViewHolder(holder: SmoothiePayViewHolder, position: Int) {
         holder.bind(
             getItem(position),
-            displaySmoothieById,
             onClickBtnIncrease,
             onClickBtnReduce,
             onClickBtnRemove
@@ -88,7 +71,7 @@ class SmoothiePayAdapter(
     companion object {
         private val DiffCallback = object : DiffUtil.ItemCallback<Cart>() {
             override fun areItemsTheSame(oldItem: Cart, newItem: Cart): Boolean {
-                return oldItem.userId == newItem.userId && oldItem.smoothieId == newItem.smoothieId
+                return oldItem.smoothie.id == newItem.smoothie.id
             }
 
             override fun areContentsTheSame(oldItem: Cart, newItem: Cart): Boolean {

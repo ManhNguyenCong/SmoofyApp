@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/startFragment">
+    app:startDestination="@id/smoothieListFragment">
     <fragment
         android:id="@+id/smoothieListFragment"
         android:name="com.example.smoothieshopapp.ui.moothiescreen.fragment.SmoothieListFragment"
-        tools:layout="@layout/fragment_smoothie_list"
-        android:label="SmoothieListFragment" >
+        android:label="SmoothieListFragment"
+        tools:layout="@layout/fragment_smoothie_list">
         <action
             android:id="@+id/action_smoothieListFragment_to_detailSmoothieFragment"
             app:destination="@id/detailSmoothieFragment" />
@@ -23,49 +23,11 @@
             app:destination="@id/detailSmoothieFragment" />
         <argument
             android:name="id"
-            app:argType="string"/>
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/cartFragment"
         android:name="com.example.smoothieshopapp.ui.moothiescreen.fragment.CartFragment"
         android:label="CartFragment"
-        tools:layout="@layout/fragment_cart"/>
-    <fragment
-        android:id="@+id/startFragment"
-        android:name="com.example.smoothieshopapp.ui.loginscreen.fragment.StartFragment"
-        android:label="StartFragment"
-        tools:layout="@layout/fragment_start">
-        <action
-            android:id="@+id/action_startFragment_to_loggingFragment"
-            app:destination="@id/loggingFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/loggingFragment"
-        android:name="com.example.smoothieshopapp.ui.loginscreen.fragment.LoggingFragment"
-        android:label="fragment_logging"
-        tools:layout="@layout/fragment_logging" >
-        <action
-            android:id="@+id/action_loggingFragment_to_smoothieListFragment"
-            app:destination="@id/smoothieListFragment" />
-        <action
-            android:id="@+id/action_loggingFragment_to_registerFragment"
-            app:destination="@id/registerFragment" />
-        <argument
-            android:name="email"
-            app:argType="string"
-            android:defaultValue="none"/>
-        <argument
-            android:name="password"
-            app:argType="string"
-            android:defaultValue="none"/>
-    </fragment>
-    <fragment
-        android:id="@+id/registerFragment"
-        android:name="com.example.smoothieshopapp.ui.loginscreen.fragment.RegisterFragment"
-        android:label="RegisterFragment"
-        tools:layout="@layout/fragment_register">
-        <action
-            android:id="@+id/action_registerFragment_to_loggingFragment"
-            app:destination="@id/loggingFragment" />
-    </fragment>
+        tools:layout="@layout/fragment_cart" />
 </navigation>
